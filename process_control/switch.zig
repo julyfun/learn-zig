@@ -64,6 +64,19 @@ fn isFieldOptional(comptime T: type, field_index: usize) anyerror!bool {
     };
 }
 
+// 这段函数用来判断一个结构体的字段是否是 optional，同时它也是 comptime 的
+// 故我们可以在下面使用inline 来要求编译器帮我们展开这个switch
+fn isFieldOptional2(comptime T: type, field_index: usize) !bool {
+    const fields = @typeInfo(T).Struct.fields;
+    return switch (field_index) {
+        // 这里每次都是不同的值
+        inline 0...fields.len - 1 => |idx| {
+            return @typeInfo(fields[idx].type) == .Optional;
+        },
+        else => return error.IndexOutOfBounds,
+    };
+}
+
 test "inline switch" {
     const A = struct {
         a: ?u32,
@@ -74,4 +87,20 @@ test "inline switch" {
         break :blk false;
     };
     print("is_a_optional = {}\n", .{is_a_optional});
+}
+
+const Color = enum {
+    auto,
+    off,
+    on,
+};
+
+test "enum" {
+    const color = Color.off;
+    const must_off = switch (color) {
+        .auto => false,
+        .on => false,
+        .off => true,
+    };
+    _ = must_off;
 }
