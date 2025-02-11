@@ -4,3 +4,5 @@
 *.swp
 .zed
 __pycache__
+zig-out
+.zig-cache
